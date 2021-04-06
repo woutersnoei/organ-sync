@@ -52,18 +52,22 @@
 	evt.noteOutTracker.addNote( manual, nn, velo );
 };
 
-~local_organ.sendRemoteNote = { |evt, manual = 0, nn = 64, velo = 127|
-	evt.sendRemote( evt.makeRemoteNote( manual, nn, velo ) );
+~local_organ.sendRemoteNote = { |evt, manual = 0, nn = 64, velo = 127, index|
+	evt.sendRemote( evt.makeRemoteNote( manual, nn, velo ), index );
 };
 
 ~local_organ.makeRemoteNote = { |evt, manual = 0, nn = 64, velo = 127|
 	[ "note", manual, nn, velo ]
 };
 
-~local_organ.sendRemote = { |evt, msg|
-	evt.vpnSyncs.do({ |vpn_sync|
-		vpn_sync.sendMsg( *msg );
-	});
+~local_organ.sendRemote = { |evt, msg, index|
+	if( index.notNil ) {
+		evt.vpnSyncs.wrapAt( index ).sendMsg( *msg );
+	} {
+		evt.vpnSyncs.do({ |vpn_sync|
+			vpn_sync.sendMsg( *msg );
+		});
+	};
 };
 
 ~local_organ.recvInvite = { |evt, from, to, name|
