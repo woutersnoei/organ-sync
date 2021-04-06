@@ -133,7 +133,7 @@
 	evt.midiFuncs.do(_.free);
 	evt.midiFuncs = [
 		MIDIFunc.noteOn({ |vel, num, chan, uid|
-			if( evt.midiInCheckUID( uid ) ) {	
+			if( evt.midiInCheckUID( uid ) ) {
 				if( evt.localMode == true ) {
 					evt.sendLocalNote( chan, num, vel );
 				};

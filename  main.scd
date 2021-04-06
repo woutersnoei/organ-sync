@@ -13,8 +13,8 @@ To operate:
 - if MIDI, set the MIDI Out to the port connected to your organ
 - check if "my ip" is correct (press "fetch" or enter manually)
 - press "(re)start" once
-- press the "send invites" button 
-	- if the "accept (n)" button shows up, press it. 
+- press the "send invites" button
+	- if the "accept (n)" button shows up, press it.
 	- if the "accept (n)" button stays hidden, try "send invites" again
 	- if the "accept (n)" button never shows up, something is not right:
 		- perhaps the others aren't ready yet

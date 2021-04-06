@@ -168,8 +168,8 @@ A series of "ping" messages can be used to check connections, and also determine
 };
 
 ~vpn_sync.makeRecvInviteFuncs = { |evt|
-	thisProcess.openUDPPort( evt.recvPort );	
-	
+	thisProcess.openUDPPort( evt.recvPort );
+
 	evt.recvInviteFunc.free;
 	evt.recvInviteFunc = OSCFunc( { |msg, time, addr|
 		if( msg[1].isNumber ) {

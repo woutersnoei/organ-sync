@@ -103,12 +103,12 @@
 		evt.views[ \send ].value = evt.send.binaryValue;
 		evt.views[ \receive ].value = evt.receive.binaryValue;
 		evt.views[ \verbose ].value = evt.verbose.binaryValue;
-		if( evt.views[ \addr ].hasFocus.not ) { 
+		if( evt.views[ \addr ].hasFocus.not ) {
 			evt.views[ \addr ].value = evt.remoteAddr.ip.split($.).last.interpret;
 		};
 		//evt.views[ \port ].value = evt.remoteAddr.port;
 		/*
-		if( evt.views[ \myIP ].hasFocus.not ) { 
+		if( evt.views[ \myIP ].hasFocus.not ) {
 			evt.views[ \myIP ].value = evt.myID;
 		};
 		*/
@@ -182,7 +182,7 @@
 		.states_([["(re)start"]])
 		.action_({ |bt|
 			evt.start;
-			
+
 		});
 	evt.views[ \restart ] = Button( evt.window, 100@20 )
 		.states_([["refresh midi"]])
@@ -266,15 +266,15 @@
 		evt.views[\midiout].value =
 			MIDIClient.destinations.detectIndex({ |item| item.uid == evt.midiOut.uid });
 		evt.views[\midiout].enabled_( evt.outputMode == 'MIDI'  );
-		if( evt.views[ \myIP ].hasFocus.not ) { 
+		if( evt.views[ \myIP ].hasFocus.not ) {
 			evt.views[ \myIP ].value = ~vpn_sync.myID;
 		};
-		if( evt.invites.size > 0 ) { 
+		if( evt.invites.size > 0 ) {
 			evt.views[ \accept ].visible_( true );
 			evt.views[ \accept ].states_([["accept (%)".format( evt.invites.size ) ]]);
-		} { 
+		} {
 			evt.views[ \accept ].visible_( false );
-		};	
+		};
 		evt.views[\noteTracker].string = "in: %\t out: %".format(
 			evt.noteInTracker.activeNotes.size,
 			evt.noteOutTracker.activeNotes.size,

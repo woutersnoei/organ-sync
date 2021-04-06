@@ -11,7 +11,7 @@
 
 ~note_tracker.activeNotes = { |evt|
 	var active;
-	evt.notes.do({ |item, chan| 
+	evt.notes.do({ |item, chan|
 		item.do({ |vel, num| if( vel > 0 ) { active = active.add( [ chan, num, vel ] ) } });
 	});
 	active;
