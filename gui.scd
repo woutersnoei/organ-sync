@@ -137,9 +137,13 @@
 
 ~local_organ.makeWindow = { |evt|
 	var makeLabel, updateViews, skipJack, win, fillMIDIOuts, fillMIDIIns;
-	if( evt.window.notNil && { evt.window.isClosed.not }) { evt.window.close };
+	var bounds;
+	if( evt.window.notNil && { evt.window.isClosed.not }) { 
+		bounds = evt.window.bounds;
+		evt.window.close;
+	};
 	evt.window = Window( currentEnvironment.findKeyForValue( evt ),
-			Rect(400, 294, 324, 279)
+			bounds ? Rect(400, 294, 324, 279)
 	).front;
 	evt.window.addFlowLayout;
 	win = evt.window;
@@ -230,7 +234,7 @@
 		});
 	evt.vpnSyncs.do({ |vpnSync, i|
 		makeLabel.( "" );
-		Button( evt.window, 100@20 )
+		Button( evt.window, 160@20 )
 			.states_([[ vpnSync.remoteName ]] )
 			.action_({ vpnSync.makeWindow });
 		Button( evt.window, 20@20 )
@@ -242,19 +246,18 @@
 			//newRemote.makeOSCFuncs;
 			evt.makeWindow;
 		});
-		if( i == (evt.vpnSyncs.size-1) ) {
-			Button( evt.window, 20@20 )
-				.states_([["+"]])
-				.action_({
-					var newRemote;
-					newRemote = ().proto_( ~vpn_sync );
-					newRemote.remoteName = "remote %".format( evt.vpnSyncs.size );
-					evt.addVPNSync( newRemote );
-					//newRemote.makeOSCFuncs;
-					evt.makeWindow;
-				});
-		};
 	});
+	makeLabel.( "" );
+	Button( evt.window, 20@20 )
+		.states_([["+"]])
+		.action_({
+			var newRemote;
+			newRemote = ().proto_( ~vpn_sync );
+			newRemote.remoteName = "remote %".format( evt.vpnSyncs.size );
+			evt.addVPNSync( newRemote );
+			//newRemote.makeOSCFuncs;
+			evt.makeWindow;
+		});	
 	makeLabel.( "note tracker" );
 	evt.views[ \noteTracker ] = StaticText( evt.window, 100@20 );
 	fillMIDIOuts.value;
