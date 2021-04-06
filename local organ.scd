@@ -68,6 +68,13 @@
 		});
 	} { which.isNumber } {
 		evt.vpnSyncs.wrapAt( which ).sendMsg( *msg );
+	} { which.isKindOf( String ) } {
+		evt.vpnSyncs.select({ |item| item.remoteName.find( which ).notNil })
+			.do( _.sendMsg( *msg ) )
+	} { which.isArray } { // allow nested operation
+		which.do({ |item|
+			evt.sendRemote( msg, item );
+		})
 	};
 };
 
