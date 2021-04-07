@@ -62,7 +62,6 @@
 
 ~local_organ.sendRemote = { |evt, msg, which = \all|
 	case { which === \all } {
-	} {
 		evt.vpnSyncs.do({ |vpn_sync|
 			vpn_sync.sendMsg( *msg );
 		});
