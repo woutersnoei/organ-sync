@@ -23,6 +23,16 @@
 
 ~local_organ.midiInIndex = -1;
 
+~local_organ.numManuals = { |evt| evt.midiChannels.size };
+
+~local_organ.numManuals_ = { |evt, n = 4|
+	case { evt.numManuals > n } {
+		evt.midiChannels = evt.midiChannels[ .. n-1 ];
+	} { evt.numManuals < n } {
+		evt.midiChannels = evt.midiChannels.addAll( (evt.midiChannels.last ? -1) + (1.. n-evt.numManuals) );
+	};
+};
+
 ~local_organ.setMIDIOut = { |evt|
 	evt.midiOut = MIDIOut(
 		evt.midiOutIndex.min( MIDIClient.destinations.size-1 )
