@@ -142,8 +142,9 @@
 		bounds = evt.window.bounds;
 		evt.window.close;
 	};
-	evt.window = Window( currentEnvironment.findKeyForValue( evt ),
-			bounds ? Rect(400, 294, 324, 279)
+	evt.window = Window( 
+		currentEnvironment.findKeyForValue( evt ),
+		bounds ? Rect(600, 394, 324, 279)
 	).front;
 	evt.window.addFlowLayout;
 	win = evt.window;
@@ -152,14 +153,14 @@
 		if( newLine == true ) { evt.window.asView.decorator.nextLine; };
 		StaticText( evt.window, width@20 ).string_( name ++ " " ).align_( \right );
 	};
-	makeLabel.( "My Name", false );
-	evt.views[\myName] = TextField( win, 200@20 )
+	makeLabel.( "My Name", true );
+	evt.views[\myName] = TextField( win, 204@20 )
 		.string_( ~vpn_sync.myName )
 		.action_({ |tb|
 			 ~vpn_sync.myName = tb.string;
 		});
-	makeLabel.( "MIDI In", false );
-	evt.views[\midiin] = PopUpMenu( win, 200@20 ).action_({ |pu|
+	makeLabel.( "MIDI In" );
+	evt.views[\midiin] = PopUpMenu( win, 204@20 ).action_({ |pu|
 			evt.midiInIndex = pu.value - 1;
 		});
 	makeLabel.( "Output mode" );
@@ -177,9 +178,31 @@
 			)
 		});
 	makeLabel.( "MIDI Out" );
-	evt.views[\midiout] = PopUpMenu( win, 200@20 ).action_({ |pu|
+	evt.views[\midiout] = PopUpMenu( win, 204@20 ).action_({ |pu|
 			evt.midiOutIndex = pu.value;
 			evt.setMIDIOut;
+		});
+	makeLabel.( "Manuals" );	
+	evt.views[ \n_manuals ] = NumberBox( evt.window, 24@20 ).clipLo_(1).clipHi_(16)
+		.action_({ |tf|
+			evt.numManuals = tf.value.asInteger;
+			evt.makeMIDIChannelsWindow( true );
+		});
+	Button( evt.window, 20@20 )
+		.states_([["^"]])
+		.action_({ 
+			evt.views[ \n_manuals ].valueAction = evt.views[ \n_manuals ].value + 1;
+		});
+	Button( evt.window, 20@20 )
+		.states_([["v"]])
+		.action_({
+			evt.views[ \n_manuals ].valueAction = evt.views[ \n_manuals ].value - 1;
+		});
+	evt.window.asView.decorator.shift(28,0);
+	Button( evt.window, 100@20 )
+		.states_([["MIDI Mapping"]])
+		.action_({
+			evt.makeMIDIChannelsWindow( );
 		});
 	makeLabel.( "" );
 	evt.views[ \restart ] = Button( evt.window, 100@20 )
@@ -207,7 +230,8 @@
 			"% : %".format( item.device, item.name )
 		}) )
 	};
-	makeLabel.( "my ip", true );
+	makeLabel.( "", true );
+	makeLabel.( "My ip", true );
 	StaticText( evt.window, 72@20 ).string_( ~vpn_sync.ipRange.split($.)[..2].join($.) ++ "." );
 	evt.views[ \myIP ] = NumberBox( evt.window, 24@20 ).clipLo_(1).clipHi_(255)
 		.action_({ |tf|
@@ -219,7 +243,7 @@
 		.action_({ |bt|
 		 	~vpn_sync.fetchMyID; // cmd-. to cancel
 		});
-	makeLabel.("remotes");
+	makeLabel.("Remotes");
 	Button( evt.window, 100@20 )
 		.states_([["send invites"]])
 		.action_({
@@ -233,12 +257,12 @@
 			{ evt.makeWindow; }.defer(0.2);
 		});
 	evt.vpnSyncs.do({ |vpnSync, i|
-		makeLabel.( "" );
-		Button( evt.window, 160@20 )
-			.states_([[ vpnSync.remoteName ]] )
+		makeLabel.( (i+65).asAscii.asString );
+		Button( evt.window, 208@20 )
+			.states_([[ "%: %".format( vpnSync.remoteID, vpnSync.remoteName ) ]] )
 			.action_({ vpnSync.makeWindow });
 		Button( evt.window, 20@20 )
-		.states_([["x"]])
+		.states_([["x", Color.red(0.5)]])
 		.action_({
 			vpnSync.endOSCFuncs;
 			vpnSync.closeWindow;
@@ -246,6 +270,22 @@
 			//newRemote.makeOSCFuncs;
 			evt.makeWindow;
 		});
+		Button( evt.window, 20@20 )
+			.states_([["^"]])
+			.action_({
+				evt.vpnSyncs.remove( vpnSync );
+				evt.vpnSyncs.insert( i-1, vpnSync );
+				evt.makeWindow;
+			})
+			.visible_( i!=0 );
+		Button( evt.window, 20@20 )
+			.states_([["v"]])
+			.action_({
+				evt.vpnSyncs.remove( vpnSync );
+				evt.vpnSyncs.insert( i+1, vpnSync );
+				evt.makeWindow;
+			})
+			.visible_( i < (evt.vpnSyncs.size - 1) );
 	});
 	makeLabel.( "" );
 	Button( evt.window, 20@20 )
@@ -272,6 +312,9 @@
 		if( evt.views[ \myIP ].hasFocus.not ) {
 			evt.views[ \myIP ].value = ~vpn_sync.myID;
 		};
+		if( evt.views[ \n_manuals ].hasFocus.not ) {
+			evt.views[ \n_manuals ].value = evt.numManuals;
+		};
 		if( evt.invites.size > 0 ) {
 			evt.views[ \accept ].visible_( true );
 			evt.views[ \accept ].states_([["accept (%)".format( evt.invites.size ) ]]);
@@ -287,7 +330,59 @@
 	skipJack = SkipJack( updateViews, 0.5, { win.isClosed });
 };
 
+
+~local_organ.makeMIDIChannelsWindow = { |evt, ifOpen = false|
+	var makeLabel, updateViews, skipJack, win, fillMIDIOuts, fillMIDIIns;
+	var bounds, wasOpen = false;
+	if( evt.midiChannelsWindow.notNil && { evt.midiChannelsWindow.isClosed.not }) { 
+		bounds = evt.midiChannelsWindow.bounds;
+		evt.midiChannelsWindow.close;
+		wasOpen = true;
+	};
+	if( ifOpen.not or: { wasOpen && ifOpen }) {	
+		evt.midiChannelsWindow = Window( "% MIDI Channels"
+			.format( currentEnvironment.findKeyForValue( evt ) ),
+				bounds ? Rect(783, 458, 500, 300)
+		).front;
+		evt.midiChannelsWindow.addFlowLayout;
+		win = evt.midiChannelsWindow;
+		makeLabel = { |name, newLine = true, width = 100|
+			if( newLine == true ) { win.asView.decorator.nextLine; };
+			StaticText( win, width@20 ).string_( name ++ " " ).align_( \right );
+		};
+		makeLabel.("");
+		StaticText( win, 100@20 ).string_( "MIDI Channel" );
+		evt.numManuals.collect({ |i|
+			var vws;
+			if( i == 0 ) {
+				makeLabel.( "Pedals" );
+			} {
+				makeLabel.( "Manual %".format( i.asInteger ) );
+			};
+			vws = 16.collect({ |ch|
+				var name;
+				name = (ch+1).asInteger.asString;
+				Button( win, 20@20 )
+					.states_([[ name ],[ name, Color.black, Color.green ]])
+					.value_( (evt.midiChannels[i] == ch).binaryValue )
+					.action_({ |bt|
+						evt.midiChannels[i] = ch;
+						vws.do({ |vw,ii|
+							vw.value = (ch==ii).binaryValue
+						});
+					});
+			});
+		});
+	};
+};
+
+
+
 /*
 ~local_organ.makeWindow;
+
+~local_organ.makeMIDIChannelsWindow( false );
+
+~local_organ.makeMIDIChannelsWindow( true );
 */
 
