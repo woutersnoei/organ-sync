@@ -28,6 +28,7 @@
 { 10000.do{ ~nt.activeNotes.size } }.bench
 { 10000.do{ ~nt.countNotes } }.bench
 
+~note_tracker.resetNotes
 
 ~nt.notes.collect({ |item| item.count( _ > 0 ) ? 0 }).sum;
 
