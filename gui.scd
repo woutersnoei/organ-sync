@@ -60,6 +60,15 @@
 		.action_({ |tf|
 			evt.makeRemoteAddr( tf.value );
 		});
+	makeLabel.( "# manuals", true );
+	evt.views[ \manuals ] = NumberBox( evt.window, 24@20 ).clipLo_(1).clipHi_(16)
+		.action_({ |tf|
+			if( evt.remote_extraArgs.notNil ) {
+				evt.remote_extraArgs[0] = tf.value.asInteger;
+			} {
+				evt.remote_extraArgs = [ tf.value.asInteger ];
+			};
+		});
 	makeLabel.( "latency" );
 	evt.views[ \latency ] = NumberBox( evt.window, 100@20 )
 		.action_({ |box| evt.latency = box.value; })
@@ -100,19 +109,22 @@
 			)
 		});
 	updateViews = {
+		var updateBox;
+		updateBox = { |box, value|
+			if( box.hasFocus.not ) { box.value = value };
+		};
 		evt.views[ \send ].value = evt.send.binaryValue;
 		evt.views[ \receive ].value = evt.receive.binaryValue;
 		evt.views[ \verbose ].value = evt.verbose.binaryValue;
-		if( evt.views[ \addr ].hasFocus.not ) {
-			evt.views[ \addr ].value = evt.remoteAddr.ip.split($.).last.interpret;
-		};
+		updateBox.( evt.views[ \addr ], evt.remoteAddr.ip.split($.).last.interpret; );
+		updateBox.( evt.views[ \manuals ], (evt.remote_extraArgs ? [4])[0].asInteger );
 		//evt.views[ \port ].value = evt.remoteAddr.port;
 		/*
 		if( evt.views[ \myIP ].hasFocus.not ) {
 			evt.views[ \myIP ].value = evt.myID;
 		};
 		*/
-		evt.views[ \latency ].value = evt.latency;
+		updateBox.( evt.views[ \latency ], evt.latency );
 		evt.views[ \ping_received ].background_(
 			switch( evt.pingReplyReceived,
 				true, { Color.green.alpha_(2/3) },
@@ -144,7 +156,7 @@
 	};
 	evt.window = Window( 
 		currentEnvironment.findKeyForValue( evt ),
-		bounds ? Rect(600, 394, 324, 279)
+		bounds ? Rect(600, 394, 397, 335)
 	).front;
 	evt.window.addFlowLayout;
 	win = evt.window;
@@ -226,8 +238,8 @@
 		}) )
 	};
 	fillMIDIIns = {
-		evt.views[\midiin].items_( ["all"] ++ MIDIClient.sources.collect({ |item|
-			"% : %".format( item.device, item.name )
+		evt.views[\midiin].items_( ["all"] ++ MIDIClient.sources.collect({ |item, i|
+			"%: % : %".format( i, item.device, item.name )
 		}) )
 	};
 	makeLabel.( "", true );
@@ -256,8 +268,18 @@
 			~local_organ.startRemotes;
 			{ evt.makeWindow; }.defer(0.2);
 		});
+	evt.views[ \send ] = [];
+	evt.views[ \receive ] = [];
 	evt.vpnSyncs.do({ |vpnSync, i|
-		makeLabel.( (i+65).asAscii.asString );
+		makeLabel.( (i+65).asAscii.asString, true, 52 );
+		evt.views[ \send ] = evt.views[ \send ].add( 
+			StaticText( evt.window, 20@20 )
+				.string_( "s" ).align_( \center )
+		);
+		evt.views[ \receive ] = evt.views[ \receive ].add(
+			StaticText( evt.window, 20@20 )
+				.string_( "r" ).align_( \center )
+		);
 		Button( evt.window, 208@20 )
 			.states_([[ "%: %".format( vpnSync.remoteID, vpnSync.remoteName ) ]] )
 			.action_({ vpnSync.makeWindow });
@@ -325,9 +347,25 @@
 			evt.noteInTracker.activeNotes.size,
 			evt.noteOutTracker.activeNotes.size,
 		);
+		evt.vpnSyncs.do({ |vpn_sync, i|
+			if( vpn_sync.send ) {
+				evt.views[\send][i].background = if( 
+					(Process.elapsedTime - (evt.messageSendTracker[ vpn_sync ] ? 0)) < 0.26
+				) { Color.yellow } { Color.white };
+			} {
+				evt.views[\send][i].background = Color.clear;
+			};
+			if( vpn_sync.receive ) {
+				evt.views[\receive][i].background = if( 
+					(Process.elapsedTime - (evt.messageReceiveTracker[ vpn_sync ] ? 0)) < 0.26
+				) { Color.cyan } { Color.white };
+			} {
+				evt.views[\receive][i].background = Color.clear;
+			};
+		});
 	};
 	updateViews.value;
-	skipJack = SkipJack( updateViews, 0.5, { win.isClosed });
+	skipJack = SkipJack( updateViews, 0.25, { win.isClosed });
 };
 
 
@@ -342,37 +380,83 @@
 	if( ifOpen.not or: { wasOpen && ifOpen }) {	
 		evt.midiChannelsWindow = Window( "% MIDI Channels"
 			.format( currentEnvironment.findKeyForValue( evt ) ),
-				bounds ? Rect(783, 458, 500, 300)
+				bounds ? Rect(783, 458, 540, 340)
 		).front;
 		evt.midiChannelsWindow.addFlowLayout;
 		win = evt.midiChannelsWindow;
-		makeLabel = { |name, newLine = true, width = 100|
+		makeLabel = { |name, newLine = true, width = 120|
 			if( newLine == true ) { win.asView.decorator.nextLine; };
 			StaticText( win, width@20 ).string_( name ++ " " ).align_( \right );
 		};
 		makeLabel.("");
-		StaticText( win, 100@20 ).string_( "MIDI Channel" );
+		StaticText( win, 300@20 ).string_( "To local organ (if not OSC)" );
+		makeLabel.("Manual");
 		evt.numManuals.collect({ |i|
-			var vws;
+			var vw;
+			vw = StaticText( win, 50@20 ).align_( \center );
 			if( i == 0 ) {
-				makeLabel.( "Pedals" );
+				vw.string = "P";
 			} {
-				makeLabel.( "Manual %".format( i.asInteger ) );
+				vw.string = "M%".format( i.asInteger );
 			};
-			vws = 16.collect({ |ch|
-				var name;
-				name = (ch+1).asInteger.asString;
-				Button( win, 20@20 )
-					.states_([[ name ],[ name, Color.black, Color.green ]])
-					.value_( (evt.midiChannels[i] == ch).binaryValue )
-					.action_({ |bt|
-						evt.midiChannels[i] = ch;
-						vws.do({ |vw,ii|
-							vw.value = (ch==ii).binaryValue
-						});
+		});
+		makeLabel.("MIDI Out channel");
+		evt.numManuals.collect({ |i|
+			PopUpMenu( win, 50@20 )
+				.items_( (1..16).collect(_.asString) )
+				.value_( (evt.midiChannels[i]).asInteger )
+				.action_({ |pu|
+					evt.midiChannels[i] = pu.value;
+				});
+		});
+		
+		makeLabel.("");
+		
+		evt.vpnSyncs.collect({ |vpnSync, i|
+			var n;
+			makeLabel.( (i+65).asAscii.asString );
+			StaticText( win, 300@20 ).string_( "To %: %"
+				.format( vpnSync.remoteID, vpnSync.remoteName ) 
+			);
+			n = evt.remote_numManuals(i);
+			makeLabel.( "Manual" );
+			n.collect({ |i|
+				var vw;
+				vw = StaticText( win, 50@20 ).align_( \center );
+				if( i == 0 ) {
+					vw.string = "P";
+				} {
+					vw.string = "M%".format( i.asInteger );
+				};
+			});
+			makeLabel.( "MIDI In channel" );
+			n.collect({ |ii|
+				var ch, array;
+				ch = evt.remote_get_midi_channel( i, ii );
+				switch( ch, nil, { ch = ii }, 'any', { ch = -1 }, 'off', { ch = 16 });
+				PopUpMenu( win, 50@20 )
+					.items_( ["any"] ++ (1..16).collect(_.asString) ++ ["off"] )
+					.value_( ch+1 )
+					.action_({ |pu|
+						 evt.remote_set_midi_channel( i, ii, ([\any] ++ (..15) ++ [\off])[ pu.value ] );
+					});
+			});
+			makeLabel.( "MIDI In device" );
+			n.collect({ |ii|
+				var dev;
+				dev = evt.remote_get_midi_device( i, ii ) ? -1;
+				PopUpMenu( win, 50@20 )
+					.items_( ["any"] ++ MIDIClient.sources.collect({ |item, i| i.asString }) )
+					.value_( dev+1 )
+					.action_({ |pu|
+						var dev;
+						if( pu.value == 0 ) { dev = nil } { dev = pu.value - 1 };
+						evt.remote_set_midi_device( i, ii, dev );
+						//evt.midiChannels[i] = pu.value;
 					});
 			});
 		});
+		
 	};
 };
 
