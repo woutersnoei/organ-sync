@@ -16,6 +16,8 @@ A series of "ping" messages can be used to check connections, and also determine
 
 ~vpn_sync.myName = "scutil --get LocalHostName".unixCmdGetStdOut.select(_ != $\n );
 
+~vpn_sync.extraArgs = [];
+
 ~vpn_sync.fetchMyID = { |evt|
 	var res;
 	res = "ifconfig ppp0".unixCmdGetStdOut;
@@ -162,7 +164,7 @@ A series of "ping" messages can be used to check connections, and also determine
 		var addr;
 		if( id != evt.myID ) {
 			addr = NetAddr( evt.ipRange.format( id ), evt.recvPort );
-			addr.sendMsg( "/vpn_invite", evt.myID, id, evt.myName );
+			addr.sendMsg( "/vpn_invite", evt.myID, id, evt.myName, *evt.extraArgs );
 		};
 	});
 };
@@ -173,16 +175,16 @@ A series of "ping" messages can be used to check connections, and also determine
 	evt.recvInviteFunc.free;
 	evt.recvInviteFunc = OSCFunc( { |msg, time, addr|
 		if( msg[1].isNumber ) {
-			~vpn_sync.doRecvInviteAction( msg[1].asInteger, msg[2].asInteger, msg[3] ); // from, to, name
-			NetAddr( evt.ipRange.format( msg[1].asInteger ), evt.recvPort ).sendMsg( "/vpn_invite", "reply", msg[2], msg[1], evt.myName );
+			~vpn_sync.doRecvInviteAction( msg[1].asInteger, msg[2].asInteger, msg[3], *msg[4..] ); // from, to, name, extraArgs
+			NetAddr( evt.ipRange.format( msg[1].asInteger ), evt.recvPort ).sendMsg( "/vpn_invite", "reply", msg[2], msg[1], evt.myName, *evt.extraArgs );
 		} {
-			~vpn_sync.doRecvInviteAction( msg[2].asInteger, msg[3].asInteger, msg[4] ); // from, to, name
+			~vpn_sync.doRecvInviteAction( msg[2].asInteger, msg[3].asInteger, msg[4], *msg[5..] ); // from, to, name
 		};
 	}, "/vpn_invite" );
 };
 
-~vpn_sync.doRecvInviteAction = { |evt, from, to, name| // from: sender, to: me, name: of sender
-	evt[ \recvInviteAction ].value( from, to, name );
+~vpn_sync.doRecvInviteAction = { |evt, from, to, name ...extraArgs| // from: sender, to: me, name: of sender
+	evt[ \recvInviteAction ].value( from, to, name, *extraArgs );
 };
 
 ~vpn_sync.endOSCFuncs = { |evt|
