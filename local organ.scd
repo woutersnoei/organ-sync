@@ -17,11 +17,14 @@
 ~local_organ.localMode = true;
 */
 
-~local_organ.midiChannels = [ 0,1,2,3 ]; // pedals, manual 1, 2, 3
+~local_organ.midiChannels = [ 0,1,2,3 ]; // pedals, manual 1, 2, 3 (nil = off)
 
 ~local_organ.midiOutIndex = 0;
 
 ~local_organ.midiInIndex = -1;
+
+~local_organ.preventFeedback = false; // only needed if the manual(s) of the local organ are used as input
+
 
 ~local_organ.numManuals = { |evt| evt.midiChannels.size };
 
@@ -131,10 +134,9 @@
 
 ~local_organ.noteInTrackers = Order();
 ~local_organ.noteOutTracker = ().proto_( ~note_tracker );
-~local_organ.remote_noteSendTrackers = ();
-~local_organ.remote_noteReceiveTrackers = ();
 ~local_organ.messageSendTracker = ();
 ~local_organ.messageReceiveTracker = ();
+~local_organ.feedbackTracker = ().proto_( ~midi_feedback_filter );
 
 ~local_organ.noteInTrackerAddNote = { |evt, chan, nn, velo, uid|
 	if( evt.noteInTrackers[ uid ].isNil ) { 
@@ -153,21 +155,38 @@
 	notes;
 };
 
-~local_organ.sendLocalNote = { |evt, manual = 0, nn = 64, velo = 127|
+~local_organ.noteInTrackerActiveNotesFor = { |evt, which = 0|
+	var notesFor = [];
+	evt.noteInTrackerActiveNotes.do({ |note|
+		evt.remote_get_manuals( which, note[0].asInteger, evt.getUIDIndex( note[3] ) ).do({ |manual|
+				notesFor = notesFor.add( [ manual ].addAll( note[1..] ) );
+			});
+	});
+	notesFor;	
+};
+
+~local_organ.sendLocalNote = { |evt, manual = 0, nn = 64, velo = 127| // nn can be Array
+	var chan;
+	chan = evt.midiChannels[ manual ];
 	switch( evt.outputMode,
 		\OSC, {
 			~bo.note( manual, nil, nn, velo );
 		},
 		\MIDI, {
-			if( nn.isArray ) {
-				nn.do({ |nx|
-					evt.midiOut.noteOn( evt.midiChannels[ manual ], nx, velo );
-				});
-			} {
-				evt.midiOut.noteOn( evt.midiChannels[ manual ], nn, velo );
+			if( chan.notNil ) {	
+				if( nn.isArray ) {
+					nn.do({ |nx|
+						evt.midiOut.noteOn( chan, nx, velo );
+					});
+				} {
+					evt.midiOut.noteOn( chan, nn, velo );
+				};
 			};
 		}
 	);
+	if( chan.notNil && { evt.preventFeedback } ) {
+		evt.feedbackTracker.addNote( manual, nn, velo );
+	};
 	evt.noteOutTracker.addNote( manual, nn, velo );
 };
 
@@ -308,20 +327,24 @@
 	evt.midiFuncs = [
 		MIDIFunc.noteOn({ |vel, num, chan, uid|
 			if( evt.midiInCheckUID( uid ) ) {
-				if( evt.localMode == true ) {
-					evt.sendLocalNote( chan, num, vel );
+				if( evt.preventFeedback.not.postln or: { evt.feedbackTracker.filter( chan, num, vel ) } ) {
+					if( evt.localMode == true ) {
+						evt.sendLocalNote( chan, num, vel );
+					};
+					evt.sendMappedRemoteNote( chan, num, vel, uid );
+					evt.noteInTrackerAddNote( chan, num, vel, uid );
 				};
-				evt.sendMappedRemoteNote( chan, num, vel, uid );
-				evt.noteInTrackerAddNote( chan, num, vel, uid );
 			}
 		}),
 		MIDIFunc.noteOff({ |vel, num, chan, uid|
 			if( evt.midiInCheckUID( uid ) ) {
-				if( evt.localMode == true ) {
-					evt.sendLocalNote( chan, num, 0 );
+				if( evt.preventFeedback.not or: { evt.feedbackTracker.filter( chan, num, 0 ) } ) {
+					if( evt.localMode == true ) {
+						evt.sendLocalNote( chan, num, 0 );
+					};
+					evt.sendMappedRemoteNote( chan, num, 0, uid );
+					evt.noteInTrackerAddNote( chan, num, 0, uid );
 				};
-				evt.sendMappedRemoteNote( chan, num, vel, uid );
-				evt.noteInTrackerAddNote( chan, num, 0, uid );
 			};
 		})
 	];

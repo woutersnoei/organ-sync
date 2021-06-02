@@ -156,7 +156,7 @@
 	};
 	evt.window = Window( 
 		currentEnvironment.findKeyForValue( evt ),
-		bounds ? Rect(600, 394, 397, 335)
+		bounds ? Rect(600, 394, 417, 335)
 	).front;
 	evt.window.addFlowLayout;
 	win = evt.window;
@@ -399,7 +399,7 @@
 			StaticText( win, width@20 ).string_( name ++ " " ).align_( \right );
 		};
 		makeLabel.("");
-		StaticText( win, 300@20 ).string_( "To local organ (if not OSC)" );
+		StaticText( win, 300@20 ).string_( "Local organ" );
 		makeLabel.("Manual");
 		evt.numManuals.collect({ |i|
 			var vw;
@@ -410,16 +410,26 @@
 				vw.string = "M%".format( i.asInteger );
 			};
 		});
-		makeLabel.("MIDI Out channel");
+		makeLabel.("MIDI channel");
 		evt.numManuals.collect({ |i|
 			PopUpMenu( win, 50@20 )
-				.items_( (1..16).collect(_.asString) )
-				.value_( (evt.midiChannels[i]).asInteger )
+				.items_( (1..16).collect(_.asString) ++ ["off"] )
+				.value_( (evt.midiChannels[i] ? 16).asInteger )
 				.action_({ |pu|
-					evt.midiChannels[i] = pu.value;
+					if( pu.value == 16 ) {
+						evt.midiChannels[i] = nil;
+					} {
+						evt.midiChannels[i] = pu.value;
+					};
 				});
 		});
-		
+		makeLabel.("prevent feedback");
+		Button( win, 50@20 )
+			.states_([["off"],["on", Color.black, Color.green]])
+			.value_( evt.preventFeedback.binaryValue )
+			.action_({ |bt|
+				evt.preventFeedback = bt.value.booleanValue;
+			});
 		makeLabel.("");
 		
 		evt.vpnSyncs.collect({ |vpnSync, i|
