@@ -358,19 +358,21 @@
 			evt.noteOutTracker.activeNotes.size,
 		);
 		evt.vpnSyncs.do({ |vpn_sync, i|
-			if( vpn_sync.send ) {
-				evt.views[\send][i].background = if( 
-					(Process.elapsedTime - (evt.messageSendTracker[ vpn_sync ] ? 0)) < 0.26
-				) { Color.yellow } { Color.white };
-			} {
-				evt.views[\send][i].background = Color.clear;
-			};
-			if( vpn_sync.receive ) {
-				evt.views[\receive][i].background = if( 
-					(Process.elapsedTime - (evt.messageReceiveTracker[ vpn_sync ] ? 0)) < 0.26
-				) { Color.cyan } { Color.white };
-			} {
-				evt.views[\receive][i].background = Color.clear;
+			if( evt.views[\send][i].notNil ) {	
+				if( vpn_sync.send ) {
+					evt.views[\send][i].background = if( 
+						(Process.elapsedTime - (evt.messageSendTracker[ vpn_sync ] ? 0)) < 0.26
+					) { Color.yellow } { Color.white };
+				} {
+					evt.views[\send][i].background = Color.clear;
+				};
+				if( vpn_sync.receive ) {
+					evt.views[\receive][i].background = if( 
+						(Process.elapsedTime - (evt.messageReceiveTracker[ vpn_sync ] ? 0)) < 0.26
+					) { Color.cyan } { Color.white };
+				} {
+					evt.views[\receive][i].background = Color.clear;
+				};
 			};
 		});
 	};
