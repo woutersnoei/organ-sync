@@ -2,7 +2,13 @@
 
 ~note_tracker.addNote = { |evt, chan, num, vel|
 	if( evt.notes.isNil ) { evt.resetNotes }; // create note lib
-	evt.notes[ chan ][ num ] = vel;
+	if( num.isArray ) {
+		num.do({ |nx|
+			evt.addNote( chan, nx, vel );
+		})
+	} {
+		evt.notes[ chan ][ num ] = vel;
+	}
 };
 
 ~note_tracker.resetNotes = { |evt|

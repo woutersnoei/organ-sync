@@ -322,6 +322,16 @@
 		});	
 	makeLabel.( "note tracker" );
 	evt.views[ \noteTracker ] = StaticText( evt.window, 100@20 );
+	makeLabel.( "end all notes" );
+	Button( evt.window, 66@20 )
+		.states_([["remote"]])
+		.action_({ evt.remoteEndActiveNotes });
+	Button( evt.window, 66@20 )
+		.states_([["local"]])
+		.action_({ evt.localEndActiveNotes });
+	Button( evt.window, 66@20 )
+		.states_([["panic"]])
+		.action_({ evt.localEndAllNotes });
 	fillMIDIOuts.value;
 	fillMIDIIns.value;
 	updateViews = {
@@ -344,7 +354,7 @@
 			evt.views[ \accept ].visible_( false );
 		};
 		evt.views[\noteTracker].string = "in: %\t out: %".format(
-			evt.noteInTracker.activeNotes.size,
+			evt.noteInTrackers.collect({ |item| item.activeNotes.size }).sum,
 			evt.noteOutTracker.activeNotes.size,
 		);
 		evt.vpnSyncs.do({ |vpn_sync, i|
