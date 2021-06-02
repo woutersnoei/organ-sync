@@ -44,7 +44,7 @@ A series of "ping" messages can be used to check connections, and also determine
 	evt.remoteAddr = NetAddr( evt.ipRange.format( id.asInteger ), evt.recvPort );
 };
 
-~vpn_sync.remoteID = { |evt|
+~vpn_sync[ \remoteID ] = { |evt|
 	evt.remoteAddr.ip.split( $. ).last.interpret.asInteger;
 };
 
