@@ -327,7 +327,7 @@
 	evt.midiFuncs = [
 		MIDIFunc.noteOn({ |vel, num, chan, uid|
 			if( evt.midiInCheckUID( uid ) ) {
-				if( evt.preventFeedback.not.postln or: { evt.feedbackTracker.filter( chan, num, vel ) } ) {
+				if( evt.preventFeedback.not or: { evt.feedbackTracker.filter( chan, num, vel ) } ) {
 					if( evt.localMode == true ) {
 						evt.sendLocalNote( chan, num, vel );
 					};
