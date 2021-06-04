@@ -26,7 +26,7 @@
 ~local_organ.preventFeedback = false; // only needed if the manual(s) of the local organ are used as input
 
 
-~local_organ.numManuals = { |evt| evt.midiChannels.size };
+~local_organ[ \numManuals ] = { |evt| evt.midiChannels.size };
 
 ~local_organ.numManuals_ = { |evt, n = 4|
 	case { evt.numManuals > n } {
