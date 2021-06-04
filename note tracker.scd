@@ -42,7 +42,7 @@
 
 ~midi_feedback_filter.filter = { |evt, chan, num, vel|
 	var index;
-	index = evt.notes.detectIndex({ |item| item == [ chan.asInteger, num.asInteger, vel.asInteger > 0 ] });
+	index = (evt.notes ? []).detectIndex({ |item| item == [ chan.asInteger, num.asInteger, vel.asInteger > 0 ] });
 	if( index.notNil ) {
 		evt.notes.removeAt( index );
 		false;
