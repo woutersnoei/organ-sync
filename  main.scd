@@ -57,5 +57,7 @@ To operate:
 /*
 ~local_organ.midiChannels = [ 0,1,2,3 ]; // pedals, manual 1, 2, 3; can also be set in gui
 
+~bo.postOSC = false; // stops posting messages in OSC mode
+
 ~local_organ.makeMIDIOuts; // if you use spoof midiOuts, call this after every change of remotes
 */
