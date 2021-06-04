@@ -243,7 +243,7 @@
 	fillMIDIIns = {
 		evt.views[\midiin].items_( ["all"] ++ MIDIClient.sources.collect({ |item, i|
 			"%: % : %".format( i, item.device, item.name )
-		}) )
+		}) ++ [ "off" ])
 	};
 	makeLabel.( "", true );
 	makeLabel.( "My ip", true );
