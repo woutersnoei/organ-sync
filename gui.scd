@@ -57,11 +57,13 @@
 	makeLabel.( "remote ip", true );
 	StaticText( evt.window, 72@20 ).string_( evt.ipRange.split($.)[..2].join($.) ++ "." );
 	evt.views[ \addr ] = NumberBox( evt.window, 24@20 ).clipLo_(1).clipHi_(255)
+		.step_( 1 )
 		.action_({ |tf|
 			evt.makeRemoteAddr( tf.value );
 		});
 	makeLabel.( "# manuals", true );
 	evt.views[ \manuals ] = NumberBox( evt.window, 24@20 ).clipLo_(1).clipHi_(16)
+		.step_( 1 )
 		.action_({ |tf|
 			if( evt.remote_extraArgs.notNil ) {
 				evt.remote_extraArgs[0] = tf.value.asInteger;
@@ -196,6 +198,7 @@
 		});
 	makeLabel.( "Manuals" );	
 	evt.views[ \n_manuals ] = NumberBox( evt.window, 24@20 ).clipLo_(1).clipHi_(16)
+		.step_( 1 )
 		.action_({ |tf|
 			evt.numManuals = tf.value.asInteger;
 			evt.makeMIDIChannelsWindow( true );
@@ -246,6 +249,7 @@
 	makeLabel.( "My ip", true );
 	StaticText( evt.window, 72@20 ).string_( ~vpn_sync.ipRange.split($.)[..2].join($.) ++ "." );
 	evt.views[ \myIP ] = NumberBox( evt.window, 24@20 ).clipLo_(1).clipHi_(255)
+		.step_( 1 )
 		.action_({ |tf|
 			~vpn_sync.myID = tf.value;
 		});
