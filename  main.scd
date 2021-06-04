@@ -46,6 +46,7 @@ To operate:
 	"note tracker.scd", // simple utility to track note on/off status
 	"local organ.scd", // engine for the local organ
 	"gui.scd", // a GUI interface
+	"spoof midiOuts.scd", // for SuperCollider users; use in Pbind (for example)
 ].do({ |item|
 	(thisProcess.nowExecutingPath.dirname +/+ item).load;
 });
@@ -54,5 +55,7 @@ To operate:
 )
 
 /*
-~local_organ.midiChannels = [ 0,1,2,3 ]; // pedals, manual 1, 2, 3
+~local_organ.midiChannels = [ 0,1,2,3 ]; // pedals, manual 1, 2, 3; can also be set in gui
+
+~local_organ.makeMIDIOuts; // if you use spoof midiOuts, call this after every change of remotes
 */
