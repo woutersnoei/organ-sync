@@ -194,8 +194,14 @@ A series of "ping" messages can be used to check connections, and also determine
 
 ~vpn_sync.sendMsg = { |evt ...msg|
 	if( evt.send == true ) {
-		evt.remoteAddr.sendBundle( 0, [ "/vpn_sync", evt.myID ] ++ msg );
-	};
+		if( evt.verbose ) { 
+			"msg sent to %:% : %\n".postf( 
+				evt.remoteAddr.ip,
+				evt.remoteAddr.port,
+				[ "/vpn_sync", evt.myID ] ++ msg
+			); 
+		};
+		evt.remoteAddr.sendBundle( 0, [ "/vpn_sync", evt.myID ] ++ msg );	};
 };
 
 ~vpn_sync.sendOnePing = { |evt|
