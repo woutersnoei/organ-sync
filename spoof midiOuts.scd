@@ -93,6 +93,8 @@
 	};
 };
 
+~local_organ.midiOuts = { |evt| [ evt.m ].addAll( evt.rm ) };
+
 ~local_organ.makeMIDIOuts; // call again after adding/removing remote
 
 /*
