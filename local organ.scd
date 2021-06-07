@@ -319,6 +319,7 @@
 			evt.doVPNAction( *msg ); 
 		};
 	});
+	evt.makeMIDIOuts;
 };
 
 ~local_organ.makeMIDIFuncs = { |evt|
