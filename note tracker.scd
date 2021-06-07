@@ -7,7 +7,8 @@
 			evt.addNote( chan, nx, vel );
 		})
 	} {
-		evt.notes[ chan ][ num ] = vel;
+		if( vel == 0 ) { vel = -1 } { vel = 1 };
+		evt.notes[ chan ][ num ] = ((evt.notes[ chan ][ num ] ? 0) + vel).max(0);
 	}
 };
 
@@ -18,7 +19,13 @@
 ~note_tracker.activeNotes = { |evt|
 	var active;
 	evt.notes.do({ |item, chan|
-		item.do({ |vel, num| if( vel > 0 ) { active = active.add( [ chan, num, vel ] ) } });
+		item.do({ |n, num|
+			if( n > 0 ) { 
+				n.do({
+					active = active.add( [ chan, num, 127 ] ) 
+				});
+			} 
+		});
 	});
 	active;
 };
