@@ -366,7 +366,7 @@
 				if( vpn_sync.send ) {
 					evt.views[\send][i].background = if( 
 						(Process.elapsedTime - (evt.messageSendTracker[ vpn_sync ] ? 0)) < 0.26
-					) { Color.yellow } { Color.white };
+					) { Color.red } { Color.white };
 				} {
 					evt.views[\send][i].background = Color.clear;
 				};
