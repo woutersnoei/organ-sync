@@ -20,7 +20,7 @@ Functions are included to play notes and to change registers, and the engine kee
 ~bo.fake = false;
 
 ~bo.numManuals = 4;
-~bo.numLayers = 9;
+~bo.numLayers = 4;
 
 ~bo.regDict = { nil ! ~bo.numLayers } ! ~bo.numManuals;
 
