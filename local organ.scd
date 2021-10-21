@@ -190,6 +190,17 @@
 	evt.noteOutTracker.addNote( manual, nn, velo );
 };
 
+~local_organ.sendLocalCC = { |evt, chan = 0, cc = 0, val = 64|
+	switch( evt.outputMode,
+		\OSC, { 
+			// don't know what to do with cc
+		},
+		\MIDI, {
+			evt.midiOut.control( chan, cc, val );
+		}
+	);
+};
+
 ~local_organ.localEndActiveNotes = { |evt| // ends currently tracked notes on local organ
 	evt.noteOutTracker.activeNotes.do({ |note|
 		evt.sendLocalNote( note[0], note[1], 0 );
@@ -227,6 +238,15 @@
 ~local_organ.makeRemoteNote = { |evt, manual = 0, nn = 64, velo = 127|
 	[ "note", manual, nn, velo ]
 };
+
+~local_organ.sendRemoteCC = { |evt, chan = 0, cc = 0, val = 64, which = \all|
+	evt.sendRemote( evt.makeRemoteCC( chan, cc, val ), which );
+};
+
+~local_organ.makeRemoteCC = { |evt, chan = 0, cc = 0, val = 64|
+	[ "cc", chan, cc, val ]
+};
+
 
 ~local_organ.sendRemote = { |evt, msg, which = \all|
 	var res;
@@ -305,11 +325,13 @@
 	evt.updateVPNActions;
 };
 
+~local_organ.vpnActions = (
+	\note: { |evt ...args| evt.sendLocalNote( *args[1..] ) },
+	\cc: { |evt ...args| evt.sendLocalCC( *args[1..] ) }
+);
+
 ~local_organ.doVPNAction = { |evt ...args|
-	switch( args[0].asSymbol,
-		\note, { evt.sendLocalNote( *args[1..] ) },
-		// add more options (registers etc.) later
-	);
+	evt.vpnActions[ args[0].asSymbol ].value( evt, *args );
 };
 
 ~local_organ.updateVPNActions = { |evt|
@@ -347,7 +369,16 @@
 					evt.noteInTrackerAddNote( chan, num, 0, uid );
 				};
 			};
-		})
+		}),
+		MIDIFunc.cc({ |val, num, chan, uid|
+			if( evt.midiInCheckUID( uid ) ) {
+				if( evt.localMode == true ) {
+					evt.sendLocalCC( chan, num, val );
+				};
+				evt.sendRemoteCC( chan, num, val );
+				//evt.sendMappedRemoteNote( chan, num, 0, uid );
+			};
+		});
 	];
 };
 
