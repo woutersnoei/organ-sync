@@ -14,7 +14,7 @@ Functions are included to play notes and to change registers, and the engine kee
 ~bo.chanOffset = 0;
 ~bo.noteOffset = 0; // note 69 == A440
 
-~bo.checkNotes = true;
+~bo.checkNotes = false;
 ~bo.postOSC = true;
 
 ~bo.fake = false;
