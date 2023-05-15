@@ -51,6 +51,11 @@ Functions are included to play notes and to change registers, and the engine kee
 	arg evt, chan, layer, notes, val, duration;
 	var force;
 	var msg, regs, range;
+	if( layer.isNil ) {
+		layer = (chan.asFloat.frac.round(0.1) * 10).asInteger;
+		if( layer == 0 ) { layer = nil };
+	};
+	chan = chan.asInteger;
 	case { val == 0 } {
 		force = 0;
 	} { val < 0 } {
