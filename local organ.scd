@@ -192,8 +192,31 @@
 
 ~local_organ.sendLocalCC = { |evt, chan = 0, cc = 0, val = 64|
 	switch( evt.outputMode,
-		\OSC, { 
-			// don't know what to do with cc
+		\OSC, {
+			switch( cc,
+				// mimicks Orgelpark MIDI to OSC max patch
+				1, {
+					~bo.tremolo( 'ow', nil, val.linexp(0,127,0.005,12) );
+				},
+				2, {
+					~bo.tremolo( 'ow', val.inclusivelyBetween(1,126), nil, val / 127 );
+				},
+				3, {
+					~bo.tremolo( 'hw', nil, val.linexp(0,127,0.005,12) );
+				},
+				4, {
+					~bo.tremolo( 'hw', val.inclusivelyBetween(1,126), nil, val / 127 );
+				},
+				5, {
+					~bo.motorSpeed( val / 127 );
+				},
+				6, {
+					~bo.crescendo( val / 127 );
+				},
+				7, {
+					~bo.swell( val / 127 );
+				}
+			);
 		},
 		\MIDI, {
 			evt.midiOut.control( chan, cc, val );

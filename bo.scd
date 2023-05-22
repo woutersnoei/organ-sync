@@ -205,6 +205,9 @@ Functions are included to play notes and to change registers, and the engine kee
 			speed = "%bpm".format( ( 60 / speed ).asInteger );
 		};
 	};
+	if( on.isKindOf( Boolean ) ) {
+		on = if( on ) { "on" } { "off" };
+	};
 	list = [ on !? _.asString, width, speed ].select(_.notNil);
 	if( list.size > 0 ) {
 		if( evt.postOSC == true ) { ([ command ] ++ list).postcs };
@@ -231,6 +234,22 @@ Functions are included to play notes and to change registers, and the engine kee
 	evt.motorSpeedValue = (evt.motorSpeedValue + amount).clip(0,1);
 		if( evt.postOSC == true ) { [  "/SP0", evt.motorSpeedValue.asFloat ].postcs };
 	~bo.addr.sendMsg( "/SP0", evt.motorSpeedValue.asFloat );
+};
+
+~bo.crescendoValue = 0; // crescendo pedal
+
+~bo.crescendo = { |evt, amount = 0.0|
+	if( evt.postOSC == true ) { [  "/SP1", amount.asFloat ].postcs };
+	evt.crescendoValue = amount;
+	~bo.addr.sendMsg( "/SP1", amount.asFloat );
+};
+
+~bo.swellValue = 0; // sauer swell box
+
+~bo.swell = { |evt, amount = 0.0|
+	if( evt.postOSC == true ) { [  "/SP2", amount.asFloat ].postcs };
+	evt.swellValue = amount;
+	~bo.addr.sendMsg( "/SP2", amount.asFloat );
 };
 
 (
