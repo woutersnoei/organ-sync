@@ -25,7 +25,7 @@
 
 ~local_organ.preventFeedback = false; // only needed if the manual(s) of the local organ are used as input
 
-~local_organ.auxOSCMIDIChannels = [1]; //last manuals of OSC will instead send to this MIDI channel
+~local_organ.auxOSCMIDIChannels = []; //last manuals of OSC will instead send to this MIDI channel
 
 
 ~local_organ[ \numManuals ] = { |evt| evt.midiChannels.size };
