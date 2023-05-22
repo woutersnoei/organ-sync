@@ -25,6 +25,8 @@
 
 ~local_organ.preventFeedback = false; // only needed if the manual(s) of the local organ are used as input
 
+~local_organ.auxOSCMIDIChannels = [1]; //last manuals of OSC will instead send to this MIDI channel
+
 
 ~local_organ[ \numManuals ] = { |evt| evt.midiChannels.size };
 
@@ -166,11 +168,22 @@
 };
 
 ~local_organ.sendLocalNote = { |evt, manual = 0, nn = 64, velo = 127| // nn can be Array
-	var chan;
+	var chan, auxChan;
 	chan = evt.midiChannels[ manual ];
 	switch( evt.outputMode,
 		\OSC, {
-			~bo.note( manual, nil, nn, velo );
+			auxChan = evt.auxOSCMIDIChannels[ manual - evt.numManuals + (evt.auxOSCMIDIChannels.size) ];
+			if( auxChan.postln.notNil ) {
+				if( nn.isArray ) {
+					nn.do({ |nx|
+						evt.midiOut.noteOn( auxChan, nx, velo );
+					});
+				} {
+					evt.midiOut.noteOn( auxChan, nn, velo );
+				};
+			} {
+				~bo.note( manual, nil, nn, velo );
+			};
 		},
 		\MIDI, {
 			if( chan.notNil ) {
