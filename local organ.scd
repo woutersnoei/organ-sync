@@ -81,8 +81,8 @@
 	case { evt.remoteChannelMap[ remoteIndex ].isNil or: { evt.remoteChannelMap[ remoteIndex ].isNil } } {
 		manuals = [midiChannel];
 	} {
-		manuals = evt.remoteChannelMap[ remoteIndex ].select({ |item| 
-			[ midiChannel, 'any' ].includes( item ); 
+		manuals = evt.remoteChannelMap[ remoteIndex ].select({ |item|
+			[ midiChannel, 'any' ].includes( item );
 		}).indices;
 		if( evt.remoteChannelMap[ remoteIndex ][ midiChannel ].isNil ) {
 			manuals = manuals.add( midiChannel );
@@ -139,7 +139,7 @@
 ~local_organ.feedbackTracker = ().proto_( ~midi_feedback_filter );
 
 ~local_organ.noteInTrackerAddNote = { |evt, chan, nn, velo, uid|
-	if( evt.noteInTrackers[ uid ].isNil ) { 
+	if( evt.noteInTrackers[ uid ].isNil ) {
 		 evt.noteInTrackers[ uid ] = ().proto_( ~note_tracker );
 	};
 	evt.noteInTrackers[ uid ].addNote( chan, nn, velo );
@@ -148,7 +148,7 @@
 ~local_organ.noteInTrackerActiveNotes = { |evt|
 	var notes = [];
 	evt.noteInTrackers.do({ |item, uid|
-		item.activeNotes.do({ |note| 
+		item.activeNotes.do({ |note|
 			notes = notes.add( note.add( uid ) );
 		});
 	});
@@ -162,7 +162,7 @@
 				notesFor = notesFor.add( [ manual ].addAll( note[1..] ) );
 			});
 	});
-	notesFor;	
+	notesFor;
 };
 
 ~local_organ.sendLocalNote = { |evt, manual = 0, nn = 64, velo = 127| // nn can be Array
@@ -173,7 +173,7 @@
 			~bo.note( manual, nil, nn, velo );
 		},
 		\MIDI, {
-			if( chan.notNil ) {	
+			if( chan.notNil ) {
 				if( nn.isArray ) {
 					nn.do({ |nx|
 						evt.midiOut.noteOn( chan, nx, velo );
@@ -238,8 +238,8 @@
 
 ~local_organ.remoteEndActiveNotes = { |evt| // ends all remote notes based on midi input
 	evt.noteInTrackerActiveNotes.do({ |note|
-		evt.sendMappedRemoteNote( note[0], note[1], 0, note[3] ); 
-		evt.noteInTrackerAddNote( note[0], note[1], 0, note[3] ); 
+		evt.sendMappedRemoteNote( note[0], note[1], 0, note[3] );
+		evt.noteInTrackerAddNote( note[0], note[1], 0, note[3] );
 	});
 };
 
@@ -333,8 +333,8 @@
 		vpnSync.remoteID_( id );
 		//vpnSync.extraArgs = [ evt.numManuals ];
 		evt.vpnSyncs = evt.vpnSyncs.add( vpnSync );
-	} { 
-		"remote id % already added, updating name and specs\n".postf( id ); 
+	} {
+		"remote id % already added, updating name and specs\n".postf( id );
 	};
 	vpnSync.remote_extraArgs_( [ numManuals ] );
 	vpnSync.remoteName = name ?? { "remote %".format( evt.vpnSyncs.size ); };
@@ -359,9 +359,9 @@
 
 ~local_organ.updateVPNActions = { |evt|
 	evt.vpnSyncs.do({ |vpnSync|
-		vpnSync.action = { |msg| 
+		vpnSync.action = { |msg|
 			evt.messageReceiveTracker[ vpnSync ] = Process.elapsedTime;
-			evt.doVPNAction( *msg ); 
+			evt.doVPNAction( *msg );
 		};
 	});
 	evt.makeMIDIOuts;
