@@ -7,6 +7,8 @@
 
 ~local_organ = ~local_organ ? ();
 
+~local_organ.safeMode = false;
+
 ~local_organ.outputMode = \OSC; // sinua OSC messages for Baroque Organ orgelpark
 
 ~local_organ.localMode = false; // only play incoming vpn notes, not local midi-in notes.
@@ -269,6 +271,9 @@
 
 ~local_organ.sendRemoteNote = { |evt, manual = 0, nn = 64, velo = 127, which = \all|
 	evt.sendRemote( evt.makeRemoteNote( manual, nn, velo ), which );
+	if( evt.safeMode == true && { velo == 0 }) { // safe mode
+		evt.sendRemote( evt.makeRemoteNote( manual, nn, velo ), which );
+	};
 };
 
 ~local_organ.makeRemoteNote = { |evt, manual = 0, nn = 64, velo = 127|
