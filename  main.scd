@@ -52,6 +52,8 @@ To operate:
 });
 
 ~local_organ.makeWindow;
+
+~local_organ.safeMode = true; // on by default for 2023 symposium
 )
 
 /*
