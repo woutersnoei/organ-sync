@@ -57,7 +57,12 @@ To operate:
 )
 
 /*
+
+~local_organ.auxOSCMIDIChannels = [0]; //last manuals of OSC will instead send to this MIDI channel
+
 ~local_organ.midiChannels = [ 0,1,2,3 ]; // pedals, manual 1, 2, 3; can also be set in gui
+
+~bo.postOSC = true; // stops posting messages in OSC mode
 
 ~bo.postOSC = false; // stops posting messages in OSC mode
 
