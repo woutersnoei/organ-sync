@@ -208,7 +208,7 @@
 ~local_organ.sendLocalCC = { |evt, chan = 0, cc = 0, val = 64|
 	switch( evt.outputMode,
 		\OSC, {
-			switch( cc,
+			switch( cc.asInteger,
 				// mimicks Orgelpark MIDI to OSC max patch
 				1, {
 					~bo.tremolo( 'ow', nil, val.linexp(0,127,0.005,12) );
