@@ -118,10 +118,17 @@
 
 ~local_organ.midiChannels = ~local_organ.midiChannels; // update once to set ~vpn_sync.extraArgs
 
-~local_organ.setMIDIOut = { |evt|
-	evt.midiOut = MIDIOut(
-		evt.midiOutIndex.min( MIDIClient.destinations.size-1 )
-	).latency_(0);
+~local_organ.setMIDIOut = { |evt, spoof = false|
+	if( spoof.not && { MIDIClient.destinations.size > 0 }) {
+		evt.midiOut = MIDIOut(
+			evt.midiOutIndex.min( MIDIClient.destinations.size-1 )
+		).latency_(0);
+	} {
+		evt.midiOut = ( // create spoof MIDIOut with warnings if no MIDI device detected
+			\noteOn: { |evt ...args| "noteOn %: no MIDI device detected\n".postf( args ) },
+			\control: { |evt ...args| "control %: no MIDI device detected\n".postf( args ) }
+		);
+	};
 };
 
 ~local_organ.getUIDIndex = { |evt, uid|
