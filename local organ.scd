@@ -126,7 +126,8 @@
 	} {
 		evt.midiOut = ( // create spoof MIDIOut with warnings if no MIDI device detected
 			\noteOn: { |evt ...args| "noteOn %: no MIDI device detected\n".postf( args ) },
-			\control: { |evt ...args| "control %: no MIDI device detected\n".postf( args ) }
+			\control: { |evt ...args| "control %: no MIDI device detected\n".postf( args ) },
+			\sysex: { |evt ...args| "sysex %: no MIDI device detected\n".postf( args ) }
 		);
 	};
 };
@@ -246,6 +247,17 @@
 	);
 };
 
+~local_organ.sendLocalSysEx = { |evt, packet|
+	switch( evt.outputMode,
+		\OSC, {
+			"OSC: sysex not supported".postln;
+		},
+		\MIDI, {
+			evt.midiOut.sysex( packet );
+		}
+	);
+};
+
 ~local_organ.localEndActiveNotes = { |evt| // ends currently tracked notes on local organ
 	evt.noteOutTracker.activeNotes.do({ |note|
 		evt.sendLocalNote( note[0], note[1], 0 );
@@ -293,6 +305,14 @@
 
 ~local_organ.makeRemoteCC = { |evt, chan = 0, cc = 0, val = 64|
 	[ "cc", chan, cc, val ]
+};
+
+~local_organ.sendRemoteSysEx = { |evt, packet, which = \all|
+	evt.sendRemote( evt.makeRemoteSysEx( packet ), which );
+};
+
+~local_organ.makeRemoteSysEx = { |evt, packet|
+	[ "sysex", packet ]
 };
 
 
@@ -375,7 +395,8 @@
 
 ~local_organ.vpnActions = (
 	\note: { |evt ...args| evt.sendLocalNote( *args[1..] ) },
-	\cc: { |evt ...args| evt.sendLocalCC( *args[1..] ) }
+	\cc: { |evt ...args| evt.sendLocalCC( *args[1..] ) },
+	\sysex: { |evt ...args| evt.sendLocalSysEx( args[1] ) },
 );
 
 ~local_organ.doVPNAction = { |evt ...args|
@@ -426,7 +447,16 @@
 				evt.sendRemoteCC( chan, num, val );
 				//evt.sendMappedRemoteNote( chan, num, 0, uid );
 			};
-		});
+		}),
+		MIDIFunc.sysex({ |packet, uid|
+			if( evt.midiInCheckUID( uid ) ) {
+				if( evt.localMode == true ) {
+					evt.sendLocalSysEx( packet );
+				};
+				evt.sendRemoteSysEx( packet );
+				//evt.sendMappedRemoteNote( chan, num, 0, uid );
+			};
+		}),
 	];
 };
 
